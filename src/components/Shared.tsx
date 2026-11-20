@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { Box, Text, Badge, VStack, Heading, Button, Skeleton, Stack, FormControl, FormLabel, Input, InputRightElement, IconButton } from "@chakra-ui/react";
+import { Box, Text, Badge, VStack, Heading, Button, Skeleton, Stack, FormControl, FormLabel, Input, InputGroup, InputRightElement, IconButton } from "@chakra-ui/react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export const Card = (p: any) => <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="ink.100" p={5} {...p} />;
@@ -45,16 +45,18 @@ export const PasswordInput = ({ value, onChange, placeholder }: { value: string;
   return (
     <FormControl>
       <FormLabel>Password</FormLabel>
-      <Input
-        type={show ? "text" : "password"}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        pr="40px"
-      />
-      <InputRightElement>
-        <IconButton size="xs" variant="ghost" icon={show ? <FiEyeOff /> : <FiEye />} onClick={() => setShow(!show)} aria-label="Toggle password visibility" />
-      </InputRightElement>
+      <InputGroup>
+        <Input
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          pr="40px"
+        />
+        <InputRightElement>
+          <IconButton size="xs" variant="ghost" icon={show ? <FiEyeOff /> : <FiEye />} onClick={() => setShow(!show)} aria-label="Toggle password visibility" />
+        </InputRightElement>
+      </InputGroup>
     </FormControl>
   );
 };
