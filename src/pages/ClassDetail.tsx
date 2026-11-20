@@ -20,7 +20,7 @@ export default function ClassDetail() {
   const [removing, setRemoving] = useState(false);
   const sm = useDisclosure();
   const now = new Date();
-  const [s, setS] = useState({ title: "", start: toLocalInput(now), end: toLocalInput(new Date(now.getTime() + 3600000)), venue: "", lat: "", lng: "", radius: "50" });
+  const [s, setS] = useState({ title: "", start: toLocalInput(now), end: toLocalInput(new Date(now.getTime() + 3600000)), venue: "", lat: "", lng: "", radius: "100" });
 
   const loadClass = () => api(`/classes/${id}`).then(setC);
   const loadStudents = () => api(`/classes/${id}/students?q=${encodeURIComponent(q)}`).then(setStudents);
