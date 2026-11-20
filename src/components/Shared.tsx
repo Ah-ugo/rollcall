@@ -1,5 +1,6 @@
-import { ReactNode } from "react";
-import { Box, Text, Badge, VStack, Heading, Button, Skeleton, Stack } from "@chakra-ui/react";
+import { ReactNode, useState } from "react";
+import { Box, Text, Badge, VStack, Heading, Button, Skeleton, Stack, FormControl, FormLabel, Input, InputRightElement, IconButton } from "@chakra-ui/react";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export const Card = (p: any) => <Box bg="white" borderRadius="2xl" border="1px solid" borderColor="ink.100" p={5} {...p} />;
 
@@ -38,3 +39,22 @@ export function getPosition(): Promise<GeolocationPosition> {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   });
 }
+
+export const PasswordInput = ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) => {
+  const [show, setShow] = useState(false);
+  return (
+    <FormControl>
+      <FormLabel>Password</FormLabel>
+      <Input
+        type={show ? "text" : "password"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        pr="40px"
+      />
+      <InputRightElement>
+        <IconButton size="xs" variant="ghost" icon={show ? <FiEyeOff /> : <FiEye />} onClick={() => setShow(!show)} aria-label="Toggle password visibility" />
+      </InputRightElement>
+    </FormControl>
+  );
+};

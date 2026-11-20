@@ -10,6 +10,8 @@ export default function SessionDetail() {
   const toast = useToast();
   const [s, setS] = useState<any>(null);
   const [attempts, setAttempts] = useState<any[]>([]);
+  const [acting, setActing] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const ws = useRef<WebSocket>();
 
   const load = async () => { setS(await api(`/sessions/${id}`)); setAttempts(await api(`/sessions/${id}/attempts`)); };
@@ -27,7 +29,7 @@ export default function SessionDetail() {
   }, [id]);
 
   if (!s) return <Loading />;
-  const act = async (action: string) => { setS({ ...(await api(`/sessions/${id}`, { method: "PATCH", body: { action } })), roster: s.roster }); load(); };
+  const act = async (action: string) => { setActing(true); try { setS({ ...(await api(`/sessions/${id}`, { method: "PATCH", body: { action } })), roster: s.roster }); load(); } catch (e: any) { toast({ status: "error", title: e.message }); } finally { setActing(false); } };
   const copy = () => { navigator.clipboard.writeText(s.url); toast({ status: "success", title: "Link copied", duration: 1500 }); };
   const live = s.status === "open" || s.status === "not_started";
 
@@ -36,7 +38,7 @@ export default function SessionDetail() {
       <HStack justify="space-between" flexWrap="wrap">
         <Box><Text color="brand.600" fontWeight={700} fontSize="sm">{s.course_code} · {s.course_title}</Text><HStack><Heading size="lg">{s.title}</Heading><StatusBadge status={s.status} /></HStack>
           <Text color="ink.500" fontSize="sm">{fmt(s.start_time)} to {fmt(s.end_time)} · {s.venue} · {s.radius_m} m radius</Text></Box>
-        {live && <HStack><Button variant="outline" onClick={() => act("close")}>Close now</Button><Button variant="outline" colorScheme="red" onClick={() => window.confirm("Cancel this session?") && act("cancel")}>Cancel session</Button></HStack>}
+        {live && <HStack><Button variant="outline" isLoading={acting} onClick={() => act("close")}>Close now</Button><Button variant="outline" isLoading={acting} colorScheme="red" onClick={() => window.confirm("Cancel this session?") && act("cancel")}>Cancel session</Button></HStack>}
       </HStack>
       <SimpleGrid columns={{ base: 2, md: 4 }} spacing={4}>
         <Stat label="Enrolled" value={s.enrolled} /><Stat label="Present" value={s.present} /><Stat label="Not yet present" value={s.enrolled - s.present} /><Stat label="Failed attempts" value={s.failed} />

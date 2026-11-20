@@ -15,6 +15,9 @@ export default function ClassDetail() {
   const [report, setReport] = useState<any>(null);
   const [q, setQ] = useState("");
   const [rm, setRm] = useState<any>(null);
+  const [creating, setCreating] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const sm = useDisclosure();
   const now = new Date();
   const [s, setS] = useState({ title: "", start: toLocalInput(now), end: toLocalInput(new Date(now.getTime() + 3600000)), venue: "", lat: "", lng: "", radius: "50" });
@@ -36,6 +39,7 @@ export default function ClassDetail() {
     catch (e: any) { toast({ status: "error", title: e.message }); }
   };
   const createSession = async () => {
+    setCreating(true);
     try {
       const r = await api(`/classes/${id}/sessions`, { body: {
         title: s.title, start_time: new Date(s.start).toISOString(), end_time: new Date(s.end).toISOString(),
@@ -43,10 +47,15 @@ export default function ClassDetail() {
       sm.onClose(); loadSessions(); toast({ status: "success", title: "Session created" });
       window.location.href = `/sessions/${r.id}`;
     } catch (e: any) { toast({ status: "error", title: e.message }); }
+    setCreating(false);
   };
   const doRemove = async () => {
-    await api(`/classes/${id}/students/${rm.id}`, { method: "DELETE" });
-    setRm(null); loadStudents(); loadClass(); loadReport(); toast({ status: "success", title: "Student removed along with their face data" });
+    setRemoving(true);
+    try {
+      await api(`/classes/${id}/students/${rm.id}`, { method: "DELETE" });
+      setRm(null); loadStudents(); loadClass(); loadReport(); toast({ status: "success", title: "Student removed along with their face data" });
+    } catch (e: any) { toast({ status: "error", title: e.message }); }
+    setRemoving(false);
   };
   const editStudent = async (st: any) => {
     const name = window.prompt("Full name", st.full_name); if (name === null) return;
@@ -65,7 +74,7 @@ export default function ClassDetail() {
         <InputGroup><Input isReadOnly value={link} pr="44px" /><InputRightElement><IconButton aria-label="Copy" size="sm" variant="ghost" icon={<FiCopy />} onClick={() => copy(link)} /></InputRightElement></InputGroup>
         <HStack mt={3} justify="space-between" flexWrap="wrap">
           <HStack><Switch isChecked={c.enrolment_open} onChange={(e) => patch({ enrolment_open: e.target.checked })} /><Text fontSize="sm">{c.enrolment_open ? "Enrolment open" : "Enrolment closed"}</Text></HStack>
-          <Button size="sm" variant="ghost" onClick={async () => setC(await api(`/classes/${id}/regenerate-link`, { method: "POST", body: {} }))}>Generate new link</Button>
+          <Button size="sm" variant="ghost" isLoading={regenerating} onClick={async () => { setRegenerating(true); try { setC(await api(`/classes/${id}/regenerate-link`, { method: "POST", body: {} })); } catch (e: any) { toast({ status: "error", title: e.message }); } finally { setRegenerating(false); } }}>Generate new link</Button>
         </HStack>
       </Card>
       <Tabs variant="soft-rounded" colorScheme="brand" isLazy>
@@ -77,7 +86,7 @@ export default function ClassDetail() {
               {!students ? <Loading /> : students.length === 0 ? <Empty title="No students found" body="Share the enrolment link above. Students appear here after registering their face." /> :
                 <TableContainer><Table size="sm"><Thead><Tr><Th>Name</Th><Th>Matric no.</Th><Th>Registered</Th><Th /></Tr></Thead><Tbody>
                   {students.map((st) => <Tr key={st.id}><Td fontWeight={600}>{st.full_name}</Td><Td>{st.matric_no}</Td><Td>{fmt(st.created_at)}</Td>
-                    <Td isNumeric><Button size="xs" variant="ghost" onClick={() => editStudent(st)}>Edit</Button><IconButton aria-label="Remove" size="xs" variant="ghost" colorScheme="red" icon={<FiTrash2 />} onClick={() => setRm(st)} /></Td></Tr>)}
+                    <Td isNumeric><Button size="xs" variant="ghost" onClick={() => editStudent(st)}>Edit</Button><IconButton aria-label="Remove" size="xs" variant="ghost" colorScheme="red" icon={<FiTrash2 />} isDisabled={removing} onClick={() => setRm(st)} /></Td></Tr>)}
                 </Tbody></Table></TableContainer>}
             </Card>
           </TabPanel>
@@ -130,13 +139,13 @@ export default function ClassDetail() {
             <Button leftIcon={<FiMapPin />} variant="outline" alignSelf="start" onClick={useHere}>Use my current location</Button>
             <FormControl isRequired><FormLabel>Allowed radius (metres)</FormLabel><Input type="number" value={s.radius} onChange={(e) => setS({ ...s, radius: e.target.value })} /></FormControl>
           </VStack></ModalBody>
-          <ModalFooter gap={2}><Button variant="ghost" onClick={sm.onClose}>Cancel</Button><Button onClick={createSession}>Create session</Button></ModalFooter>
+          <ModalFooter gap={2}><Button variant="ghost" onClick={sm.onClose}>Cancel</Button><Button isLoading={creating} onClick={createSession}>Create session</Button></ModalFooter>
         </ModalContent>
       </Modal>
       <AlertDialog isOpen={!!rm} leastDestructiveRef={undefined as any} onClose={() => setRm(null)} isCentered>
         <AlertDialogOverlay><AlertDialogContent borderRadius="2xl"><AlertDialogHeader>Remove {rm?.full_name}?</AlertDialogHeader>
           <AlertDialogBody>This deletes their face profile and removes them from the class. Past attendance records stay in the audit log.</AlertDialogBody>
-          <AlertDialogFooter gap={2}><Button variant="ghost" onClick={() => setRm(null)}>Cancel</Button><Button colorScheme="red" onClick={doRemove}>Remove student</Button></AlertDialogFooter>
+          <AlertDialogFooter gap={2}><Button variant="ghost" onClick={() => setRm(null)}>Cancel</Button><Button colorScheme="red" isLoading={removing} onClick={doRemove}>Remove student</Button></AlertDialogFooter>
         </AlertDialogContent></AlertDialogOverlay>
       </AlertDialog>
     </VStack>

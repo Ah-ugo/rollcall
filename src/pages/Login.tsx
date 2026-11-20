@@ -3,6 +3,7 @@ import { useNavigate, Navigate } from "react-router-dom";
 import { Box, Button, FormControl, FormLabel, Heading, Input, Stack, Text, Flex, useToast, VStack } from "@chakra-ui/react";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { PasswordInput } from "../components/Shared";
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -36,7 +37,7 @@ export default function Login() {
           <Stack spacing={4} onKeyDown={(e) => e.key === "Enter" && submit()}>
             {mode === "register" && <FormControl><FormLabel>Full name</FormLabel><Input value={f.full_name} onChange={set("full_name")} /></FormControl>}
             <FormControl><FormLabel>Email</FormLabel><Input type="email" value={f.email} onChange={set("email")} /></FormControl>
-            <FormControl><FormLabel>Password</FormLabel><Input type="password" value={f.password} onChange={set("password")} placeholder={mode === "register" ? "At least 8 characters" : ""} /></FormControl>
+            <PasswordInput value={f.password} onChange={(v) => setF({ ...f, password: v })} placeholder={mode === "register" ? "At least 8 characters" : ""} />
             <Button size="lg" isLoading={busy} onClick={submit}>{mode === "login" ? "Log in" : "Create account"}</Button>
             <Button variant="link" onClick={() => setMode(mode === "login" ? "register" : "login")}>
               {mode === "login" ? "New lecturer? Create an account" : "Already registered? Log in"}

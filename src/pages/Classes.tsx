@@ -9,13 +9,16 @@ export default function Classes() {
   const [archived, setArchived] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [f, setF] = useState({ course_code: "", course_title: "", description: "" });
+  const [creating, setCreating] = useState(false);
   const toast = useToast();
   const load = () => api(`/classes?archived=${archived}`).then(setList);
   useEffect(() => { setList(null); load(); }, [archived]);
 
   const create = async () => {
+    setCreating(true);
     try { await api("/classes", { body: f }); onClose(); setF({ course_code: "", course_title: "", description: "" }); load(); toast({ status: "success", title: "Class created" }); }
     catch (e: any) { toast({ status: "error", title: e.message }); }
+    setCreating(false);
   };
   return (
     <VStack align="stretch" spacing={6}>
@@ -40,7 +43,7 @@ export default function Classes() {
             <FormControl isRequired><FormLabel>Course title</FormLabel><Input placeholder="Software Engineering" value={f.course_title} onChange={(e) => setF({ ...f, course_title: e.target.value })} /></FormControl>
             <FormControl><FormLabel>Description (optional)</FormLabel><Textarea value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></FormControl>
           </VStack></ModalBody>
-          <ModalFooter gap={2}><Button variant="ghost" onClick={onClose}>Cancel</Button><Button onClick={create}>Create class</Button></ModalFooter>
+          <ModalFooter gap={2}><Button variant="ghost" onClick={onClose}>Cancel</Button><Button isLoading={creating} onClick={create}>Create class</Button></ModalFooter>
         </ModalContent>
       </Modal>
     </VStack>
