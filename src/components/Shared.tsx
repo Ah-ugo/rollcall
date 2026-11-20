@@ -33,10 +33,31 @@ export const Loading = () => <Stack spacing={4}><Skeleton h="90px" borderRadius=
 export function getPosition(): Promise<GeolocationPosition> {
   return new Promise((res, rej) => {
     if (!navigator.geolocation) return rej(new Error("Location is not supported on this device"));
-    navigator.geolocation.getCurrentPosition(res, (e) => rej(new Error(
-      e.code === 1 ? "Location permission was denied. Allow location access in your browser settings." :
-      e.code === 3 ? "Getting your location timed out. Try again." : "Your location is unavailable right now.")),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+
+    let settled = false;
+
+    // First attempt: high-accuracy GPS (ideal, but slow on Android cold-start)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { settled = true; res(pos); },
+      () => {
+        if (settled) return;
+        // High-accuracy timed out or failed — fall back to network/wifi location
+        // which is faster and works indoors. The backend accepts up to MAX_GPS_ACCURACY_M.
+        navigator.geolocation.getCurrentPosition(
+          (pos) => { settled = true; res(pos); },
+          (e) => {
+            if (settled) return;
+            rej(new Error(
+              e.code === 1 ? "Location permission was denied. Allow location access in your browser settings." :
+              e.code === 3 ? "Getting your location timed out. Move to an area with better signal and try again." :
+              "Your location is unavailable right now."
+            ));
+          },
+          { enableHighAccuracy: false, timeout: 20000, maximumAge: 30000 }
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   });
 }
 

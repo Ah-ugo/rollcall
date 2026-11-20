@@ -21,7 +21,12 @@ const CameraCapture = forwardRef<CameraHandle, { overlay?: string }>(({ overlay 
       if (!v || !v.videoWidth) return null;
       const c = document.createElement("canvas");
       c.width = v.videoWidth; c.height = v.videoHeight;
-      c.getContext("2d")!.drawImage(v, 0, 0);
+      const ctx = c.getContext("2d")!;
+      // Mirror the frame to match the CSS scaleX(-1) preview so the face
+      // embedding is consistent between enrolment and verification captures.
+      ctx.translate(c.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(v, 0, 0);
       return c.toDataURL("image/jpeg", 0.9);
     },
   }));
